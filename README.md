@@ -1,5 +1,5 @@
 # DGAF stack
-## The **Don't Give A F\*ck** stack
+## The **"Don't Give A F\*ck"** stack
 - [Docker](https://www.docker.com/): creates and runs a container for the backend written in Go. I like to use [render](https://render.com/) to host it: they also offer a Go environment but I needed the D for this stack;
 - [Go](https://go.dev/): just an amazing language to write the backend with;
 - [AstraDB](https://www.datastax.com/products/datastax-astra/pricing): serverless DBaaS based on Cassandra, they offer you 25$ of use for free each month (which is a lot in terms of read/write/storage) and you can use different types of API through the [Stargate](https://www.datastax.com/products/datastax-astra/apis) gateway (I was surprised to see gRPC available);
@@ -11,7 +11,6 @@ This command replaces all instances of the string "frontend":
 ```bash
 find frontend/ -type f -exec sed -i -e 's/frontend/{YOUR_FLUTTER_PROJECT_NAME}/g' {} \;
 ```
-
 
 ## Go Module Name Change
 I originally ran "go mod init github.com/Jiang-Gianni/DGAFstack".\
@@ -35,4 +34,20 @@ This will **remove** the `frontend/lib/models/rest` directory and recreate it wi
 Refer to the `Makefile` to see what this last command does.
 
 ## gRPC
-Once you define your proto files in `backend\grpc`
+To install the protocol compiler and generator for Go and Dart run the comand:
+```bash
+make igrpc
+```
+Run the followings and check if they are all in the system's $PATH and add them if not:
+```bash
+command -v protoc
+command -v protoc-gen-go
+command -v protoc-gen-go-grpc
+command -v protoc-gen-dart
+```
+Once you define your proto files in `backend\grpc` use:
+```bash
+make grpc
+```
+- Go: all .go files of the proto model will be generated in the directory `backend\grpc`;
+- Dart: the command will **remove** the `frontend/lib/models/grpc` directory and recreate it with all the .dart files of the proto model.
