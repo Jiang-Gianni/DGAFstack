@@ -2,7 +2,7 @@
 ## The **"Don't Give A F\*ck"** stack
 - [Docker](https://www.docker.com/): creates and runs a container for the backend written in Go. I like to use [render](https://render.com/) to host it: they also offer a Go environment but I needed the D for this stack;
 - [Go](https://go.dev/): just an amazing language to write the backend with;
-- [AstraDB](https://www.datastax.com/products/datastax-astra/pricing): serverless DBaaS based on Cassandra, they offer you 25$ of use for free each month (which is a lot in terms of read/write/storage) and you can use different types of API through the [Stargate](https://www.datastax.com/products/datastax-astra/apis) gateway (I was surprised to see gRPC available);
+- [AstraDB](https://www.datastax.com/products/datastax-astra/pricing): serverless DBaaS based on Cassandra, they offer you 25$ of use for free each month (which is a lot in terms of read/write/storage) and you can use different types of API through the [Stargate](https://www.datastax.com/products/datastax-astra/apis) gateway (even gRPC);
 - [Flutter](https://flutter.dev/): IMHO the best mobile development framework.
 
 ## Flutter Project Name Change
@@ -30,15 +30,14 @@ go install github.com/11wizards/go-to-dart
 ```bash
 make rest
 ```
-This will **remove** the `frontend/lib/models/rest` directory and recreate it with a {go_package}.go.dart file and a {go_package}.go.g.dart file for each distinct package defined in the `backend/rest` directory (if there are multiple .go files of the same package then only one is considered). \
-Refer to the `Makefile` to see what this last command does.
+This will **remove** the `frontend/lib/models/rest` directory and recreate it with a {go_package}.go.dart file and a {go_package}.go.g.dart file for each distinct package defined in the `backend/rest` directory (if there are multiple .go files of the same package then only one is considered).
 
 ## gRPC
-To install the protocol compiler and generator for Go and Dart run the comand:
+To install the protocol compiler and generator for both Go and Dart run the comand:
 ```bash
 make igrpc
 ```
-Run the followings and check if they are all in the system's $PATH and add them if not:
+Run the followings, check if they are all in the system's $PATH and google how to add/install them if not:
 ```bash
 command -v protoc
 command -v protoc-gen-go

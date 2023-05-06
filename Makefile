@@ -4,6 +4,9 @@
 # json_serializable (dev)
 # build_runner (dev)
 
+dart-dep:
+	(cd frontend && dart pub add json_annotation grpc && dart pub add --dev json_serializable build_runner)
+
 rest:
 	rm -rf frontend/lib/models/rest && find backend/rest/ -type d -exec make go-to-dart dir={} \;
 
@@ -21,3 +24,9 @@ tidy:
 
 gen-grpc:
 	protoc $(proto) --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative && protoc --dart_out=. $(proto) && find backend/grpc/ -type f -name "*.dart" -exec mv {} ./frontend/lib/models/grpc \;
+
+go:
+	(cd backend && go build -o bin/app && bin/app)
+
+flutter:
+	(cd frontend && flutter run)
