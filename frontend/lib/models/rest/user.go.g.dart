@@ -6,37 +6,6 @@ part of 'user.go.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['Email'] as String,
-      password: json['Password'] as String,
-      createdAt: DateTime.parse(json['CreatedAt'] as String),
-      updatedAt: DateTime.parse(json['UpdatedAt'] as String),
-      deletedAt: json['DeletedAt'] == null
-          ? null
-          : DateTime.parse(json['DeletedAt'] as String),
-      options: (json['Options'] as Map<String, dynamic>?)?.map(
-            (k, e) => MapEntry(k, e as String),
-          ) ??
-          {},
-      tags:
-          (json['Tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              [],
-    );
-
-Map<String, dynamic> _$PlayerToJson(Player instance) => <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'Email': instance.email,
-      'Password': instance.password,
-      'CreatedAt': instance.createdAt.toIso8601String(),
-      'UpdatedAt': instance.updatedAt.toIso8601String(),
-      'DeletedAt': instance.deletedAt?.toIso8601String(),
-      'Options': instance.options,
-      'Tags': instance.tags,
-    };
-
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as int,
       name: json['name'] as String,
@@ -46,3 +15,100 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
     };
+
+// **************************************************************************
+// RestApiGenerator
+// **************************************************************************
+
+class UserRestApi {
+  final http.Client client;
+  final String urlUser;
+  UserRestApi({
+    required this.client,
+    required this.urlUser,
+  });
+
+  List<User> decodeJsonResponseBody(http.Response response) {
+    Iterable it = json.decode(response.body);
+    return List<User>.from(
+      it.map((e) => User.fromJson(e)),
+    );
+  }
+
+  String encodeUsersToJson(List<User> listUser) {
+    return json.encode(
+        List<Map<String, dynamic>>.from(listUser.map((e) => e.toJson())));
+  }
+
+  Future<List<User>> getUser() async {
+    final response = await http.get(Uri.parse(urlUser));
+    if (response.statusCode == HttpStatus.ok) {
+      return decodeJsonResponseBody(response);
+    } else {
+      throw Exception('Failed to get User');
+    }
+  }
+
+  Future<User> getUserById(String id) async {
+    final response = await http.get(Uri.parse(urlUser + id));
+    if (response.statusCode == HttpStatus.ok) {
+      return User.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to get User with id: $id');
+    }
+  }
+
+  Future<List<User>> postUsersWithReturn(List<User> postUsers) async {
+    final response = await http
+        .post(Uri.parse(urlUser), body: encodeUsersToJson(postUsers), headers: {
+      "Content-Type": "application/json",
+    });
+    if (response.statusCode == HttpStatus.ok) {
+      return decodeJsonResponseBody(response);
+    } else {
+      throw Exception('Failed to post User ');
+    }
+  }
+
+  void postUsers(List<User> postUsers) async {
+    final response = await http
+        .post(Uri.parse(urlUser), body: encodeUsersToJson(postUsers), headers: {
+      "Content-Type": "application/json",
+    });
+    if (response.statusCode == HttpStatus.created) {
+      return;
+    } else {
+      throw Exception('Failed to post User ');
+    }
+  }
+
+  Future<User> putUser(String id, User putUser) async {
+    final response = await http.put(
+      Uri.parse(urlUser + id),
+      body: putUser.toJson(),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+    if (response.statusCode == HttpStatus.ok) {
+      return User.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to put User with id: $id');
+    }
+  }
+
+  void deleteUser(String id, User putUser) async {
+    final response = await http.put(
+      Uri.parse(urlUser + id),
+      body: putUser.toJson(),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    );
+    if (response.statusCode == HttpStatus.ok) {
+      return;
+    } else {
+      throw Exception('Failed to delete User with id: $id');
+    }
+  }
+}

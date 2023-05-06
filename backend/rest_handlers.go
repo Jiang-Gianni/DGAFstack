@@ -11,20 +11,20 @@ import (
 
 func (s *RESTServer) handleGetUser(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	// TODO service get user
-	// user := []user.User{
-	// 	{
-	// 		ID:   1,
-	// 		Name: "Hello World",
-	// 	},
-	// 	{
-	// 		ID:   2,
-	// 		Name: "Bye Bye World",
-	// 	},
-	// }
-	user := &user.User{
-		ID:   1,
-		Name: "Hello World",
+	user := []user.User{
+		{
+			ID:   1,
+			Name: "Hello World",
+		},
+		{
+			ID:   2,
+			Name: "Bye Bye World",
+		},
 	}
+	// user := &user.User{
+	// 	ID:   1,
+	// 	Name: "Hello World",
+	// }
 	s.count++
 	fmt.Println(s.count)
 	return writeJSON(w, http.StatusOK, user)
