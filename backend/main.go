@@ -1,12 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"log"
+
+	"github.com/Jiang-Gianni/DGAFstack/astra"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	fmt.Println("Hello go")
+	godotenv.Load("keys.env")
+	_ = astra.New()
+	log.Println("Hello go")
 	s := NewRESTServer(":4716")
 	if err := s.Run(); err != nil {
 		log.Fatal(err)
