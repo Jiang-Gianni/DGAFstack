@@ -56,7 +56,7 @@ class ${className}RestApi {
   }
 
   Future<${className}> get${className}ById(String id) async {
-    final response = await http.get(Uri.parse(url${className} + id));
+    final response = await http.get(Uri.parse("\$url${className}\\\$id"));
     if (response.statusCode == HttpStatus.ok) {
       return ${className}.fromJson(json.decode(response.body));
     } else {
@@ -64,37 +64,38 @@ class ${className}RestApi {
     }
   }
 
-  Future<List<${className}>> post${className}sWithReturn(
-      List<${className}> post${className}s) async {
+  Future<List<${className}>> create${className}sWithReturn(
+      List<${className}> toBeCreated${className}s) async {
     final response = await http.post(Uri.parse(url${className}),
-        body: encode${className}sToJson(post${className}s),
+        body: encode${className}sToJson(toBeCreated${className}s),
         headers: {
           "Content-Type": "application/json",
         });
     if (response.statusCode == HttpStatus.ok) {
       return decodeJsonResponseBody(response);
     } else {
-      throw Exception('Failed to post ${className} ');
+      throw Exception('Failed to create ${className} ');
     }
   }
 
-  void post${className}s(List<${className}> post${className}s) async {
+  void create${className}s(List<${className}> toBeCreated${className}s) async {
     final response = await http.post(Uri.parse(url${className}),
-        body: encode${className}sToJson(post${className}s),
+        body: encode${className}sToJson(toBeCreated${className}s),
         headers: {
           "Content-Type": "application/json",
         });
     if (response.statusCode == HttpStatus.created) {
       return;
     } else {
-      throw Exception('Failed to post ${className} ');
+      throw Exception('Failed to create ${className} ');
     }
   }
 
-  Future<${className}> put${className}(String id, ${className} put${className}) async {
+  Future<${className}> update${className}(
+      String id, ${className} toBeUpdated${className}) async {
     final response = await http.put(
-      Uri.parse(url${className} + id),
-      body: put${className}.toJson(),
+      Uri.parse("\$url${className}\\\$id"),
+      body: toBeUpdated${className}.toJson(),
       headers: {
         "Content-Type": "application/json",
       },
@@ -102,14 +103,14 @@ class ${className}RestApi {
     if (response.statusCode == HttpStatus.ok) {
       return ${className}.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Failed to put ${className} with id: \$id');
+      throw Exception('Failed to update ${className} with id: \$id');
     }
   }
 
-  void delete${className}(String id, ${className} put${className}) async {
-    final response = await http.put(
-      Uri.parse(url${className} + id),
-      body: put${className}.toJson(),
+  void delete${className}(String id, ${className} toBeDeleted${className}) async {
+    final response = await http.delete(
+      Uri.parse("\$url${className}\\\$id"),
+      body: toBeDeleted${className}.toJson(),
       headers: {
         "Content-Type": "application/json",
       },
@@ -121,6 +122,10 @@ class ${className}RestApi {
     }
   }
 }
+
+
+
+
 
 ''';
     classBuffer.writeln(myString);

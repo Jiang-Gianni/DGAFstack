@@ -1,0 +1,121 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+package astra
+
+import (
+	"fmt"
+
+	{{range .Packages}}
+	"{{.}}"{{end}}
+	"github.com/google/uuid"
+	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
+	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
+)
+
+{{range $struct := .Structs}}
+
+//{{.Name}} REST API
+var (
+	{{.Name}}ColumnToField = []func(*pb.Value, {{.Pointer}}) {{.Pointer}}{
+		{{range .Fields}}
+		func(val *pb.Value, p {{ $struct.Pointer}}) {{ $struct.Pointer}} {
+			{{.FieldName}}, _ := {{.FirstFunction}}
+			p.{{.FieldName}} = {{.SecondFunction}}
+			return p
+		},
+		{{end}}
+	}
+	{{.Name}}QueryResponse = func(response *pb.Response) ([]{{.PackageStruct}}, error) {
+		rows := response.GetResultSet().Rows
+		result := make([]{{.PackageStruct}}, len(rows))
+		for rowIndex, row := range rows {
+			rowResult := &{{.PackageStruct}}{}
+			for valueIndex, value := range row.Values {
+				rowResult = {{.Name}}ColumnToField[valueIndex](value, rowResult)
+			}
+			result[rowIndex] = *rowResult
+		}
+		return result, nil
+	}
+)
+
+func (astraDb *AstraDB) Get{{.Name}}s() ([]{{.PackageStruct}}, error) {
+	pbQuery := &pb.Query{Cql: fmt.Sprintf("select * from %s.{{.TableName}};", astraDb.Keyspace)}
+	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	if err != nil {
+		fmt.Printf("error executing query %v", err)
+		return nil, err
+	}
+	return {{.Name}}QueryResponse(response)
+}
+
+func (astraDb *AstraDB) Get{{.Name}}ById(id string) ([]{{.PackageStruct}}, error) {
+	pbQuery := &pb.Query{
+		Cql: fmt.Sprintf("select * from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+	}
+	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	if err != nil {
+		fmt.Printf("error executing query %v", err)
+		return nil, err
+	}
+	return {{.Name}}QueryResponse(response)
+}
+
+func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruct}}) ([]string, error) {
+	newUuids := []string{}
+	var queries []*pb.BatchQuery
+	for _, row := range toBeCreated{{.Name}}s {
+		rowUuid := uuid.New().String()
+		row.{{.IdField}} = rowUuid
+		newUuids = append(newUuids, rowUuid)
+		rowBatchQuery := pb.BatchQuery{
+			Cql: fmt.Sprintf("insert into %s.{{.TableName}}({{.SnakeFieldJoined}}) values ({{.PercJoined}});", astraDb.Keyspace, {{.FieldList}}),
+		}
+		queries = append(queries, &rowBatchQuery)
+	}
+	pbBatch := &pb.Batch{
+		Type:    pb.Batch_LOGGED,
+		Queries: queries,
+	}
+	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	if err != nil {
+		fmt.Printf("error executing query %v", err)
+		return nil, err
+	}
+	return newUuids, nil
+}
+
+func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruct}}) error {
+	var queries []*pb.BatchQuery
+	for _, row := range toBeUpdated{{.Name}}s {
+		rowBatchQuery := pb.BatchQuery{
+			Cql: fmt.Sprintf("update %s.{{.TableName}} set {{range $i, $field := .SnakeFieldList}}{{.}} = {{index $struct.PercList $i}} {{end}};", astraDb.Keyspace, {{.FieldList}}),
+		}
+		_ = row
+		queries = append(queries, &rowBatchQuery)
+	}
+	pbBatch := &pb.Batch{
+		Type:    pb.Batch_LOGGED,
+		Queries: queries,
+	}
+	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	if err != nil {
+		fmt.Printf("error executing query %v", err)
+		return err
+	}
+	return nil
+}
+
+func (astraDb *AstraDB) Delete{{.Name}}ById(id string) (error) {
+	pbQuery := &pb.Query{
+		Cql: fmt.Sprintf("delete * from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+	}
+	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	if err != nil {
+		fmt.Printf("error executing query %v", err)
+		return err
+	}
+	return nil
+}
+
+{{end}}

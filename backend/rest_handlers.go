@@ -13,11 +13,11 @@ func (s *RESTServer) handleGetUser(ctx context.Context, w http.ResponseWriter, r
 	// TODO service get user
 	user := []user.User{
 		{
-			ID:   1,
+			Id:   "1",
 			Name: "Hello World",
 		},
 		{
-			ID:   2,
+			Id:   "2",
 			Name: "Bye Bye World",
 		},
 	}

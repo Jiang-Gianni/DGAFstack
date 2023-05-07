@@ -7,7 +7,7 @@ part of 'user.go.dart';
 // **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-      id: json['id'] as int,
+      id: json['id'] as String,
       name: json['name'] as String,
     );
 
@@ -50,7 +50,7 @@ class UserRestApi {
   }
 
   Future<User> getUserById(String id) async {
-    final response = await http.get(Uri.parse(urlUser + id));
+    final response = await http.get(Uri.parse("$urlUser\$id"));
     if (response.statusCode == HttpStatus.ok) {
       return User.fromJson(json.decode(response.body));
     } else {
@@ -58,34 +58,36 @@ class UserRestApi {
     }
   }
 
-  Future<List<User>> postUsersWithReturn(List<User> postUsers) async {
-    final response = await http
-        .post(Uri.parse(urlUser), body: encodeUsersToJson(postUsers), headers: {
-      "Content-Type": "application/json",
-    });
+  Future<List<User>> createUsersWithReturn(List<User> toBeCreatedUsers) async {
+    final response = await http.post(Uri.parse(urlUser),
+        body: encodeUsersToJson(toBeCreatedUsers),
+        headers: {
+          "Content-Type": "application/json",
+        });
     if (response.statusCode == HttpStatus.ok) {
       return decodeJsonResponseBody(response);
     } else {
-      throw Exception('Failed to post User ');
+      throw Exception('Failed to create User ');
     }
   }
 
-  void postUsers(List<User> postUsers) async {
-    final response = await http
-        .post(Uri.parse(urlUser), body: encodeUsersToJson(postUsers), headers: {
-      "Content-Type": "application/json",
-    });
+  void createUsers(List<User> toBeCreatedUsers) async {
+    final response = await http.post(Uri.parse(urlUser),
+        body: encodeUsersToJson(toBeCreatedUsers),
+        headers: {
+          "Content-Type": "application/json",
+        });
     if (response.statusCode == HttpStatus.created) {
       return;
     } else {
-      throw Exception('Failed to post User ');
+      throw Exception('Failed to create User ');
     }
   }
 
-  Future<User> putUser(String id, User putUser) async {
+  Future<User> updateUser(String id, User toBeUpdatedUser) async {
     final response = await http.put(
-      Uri.parse(urlUser + id),
-      body: putUser.toJson(),
+      Uri.parse("$urlUser\$id"),
+      body: toBeUpdatedUser.toJson(),
       headers: {
         "Content-Type": "application/json",
       },
@@ -93,14 +95,14 @@ class UserRestApi {
     if (response.statusCode == HttpStatus.ok) {
       return User.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Failed to put User with id: $id');
+      throw Exception('Failed to update User with id: $id');
     }
   }
 
-  void deleteUser(String id, User putUser) async {
-    final response = await http.put(
-      Uri.parse(urlUser + id),
-      body: putUser.toJson(),
+  void deleteUser(String id, User toBeDeletedUser) async {
+    final response = await http.delete(
+      Uri.parse("$urlUser\$id"),
+      body: toBeDeletedUser.toJson(),
       headers: {
         "Content-Type": "application/json",
       },

@@ -1,5 +1,5 @@
 -- GENERATED CODE - DO NOT MODIFY BY HAND
-
+drop table if exists {{.Keyspace}}.{{.TableName}};
 create table if not exists {{.Keyspace}}.{{.TableName}} ({{range .Columns}}
     {{.Name}} {{.Type}}{{if .isPrimaryKey}} primary key{{end}}{{if .isLast}}{{- else}},{{end}}{{end}}
     );

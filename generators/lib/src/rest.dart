@@ -42,45 +42,46 @@ class classNameRestApi {
   }
 
   Future<className> getclassNameById(String id) async {
-    final response = await http.get(Uri.parse(urlclassName + id));
+    final response = await http.get(Uri.parse("\$urlclassName\\\$id"));
     if (response.statusCode == HttpStatus.ok) {
       return className.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Failed to get className with id: $id');
+      throw Exception('Failed to get className with id: \$id');
     }
   }
 
-  Future<List<className>> postclassNamesWithReturn(
-      List<className> postclassNames) async {
+  Future<List<className>> createclassNamesWithReturn(
+      List<className> toBeCreatedclassNames) async {
     final response = await http.post(Uri.parse(urlclassName),
-        body: encodeclassNamesToJson(postclassNames),
+        body: encodeclassNamesToJson(toBeCreatedclassNames),
         headers: {
           "Content-Type": "application/json",
         });
     if (response.statusCode == HttpStatus.ok) {
       return decodeJsonResponseBody(response);
     } else {
-      throw Exception('Failed to post className ');
+      throw Exception('Failed to create className ');
     }
   }
 
-  void postclassNames(List<className> postclassNames) async {
+  void createclassNames(List<className> toBeCreatedclassNames) async {
     final response = await http.post(Uri.parse(urlclassName),
-        body: encodeclassNamesToJson(postclassNames),
+        body: encodeclassNamesToJson(toBeCreatedclassNames),
         headers: {
           "Content-Type": "application/json",
         });
     if (response.statusCode == HttpStatus.created) {
       return;
     } else {
-      throw Exception('Failed to post className ');
+      throw Exception('Failed to create className ');
     }
   }
 
-  Future<className> putclassName(String id, className putclassName) async {
+  Future<className> updateclassName(
+      String id, className toBeUpdatedclassName) async {
     final response = await http.put(
-      Uri.parse(urlclassName + id),
-      body: putclassName.toJson(),
+      Uri.parse("\$urlclassName\\\$id"),
+      body: toBeUpdatedclassName.toJson(),
       headers: {
         "Content-Type": "application/json",
       },
@@ -88,14 +89,14 @@ class classNameRestApi {
     if (response.statusCode == HttpStatus.ok) {
       return className.fromJson(json.decode(response.body));
     } else {
-      throw Exception('Failed to put className with id: $id');
+      throw Exception('Failed to update className with id: \$id');
     }
   }
 
-  void deleteclassName(String id, className putclassName) async {
-    final response = await http.put(
-      Uri.parse(urlclassName + id),
-      body: putclassName.toJson(),
+  void deleteclassName(String id, className toBeDeletedclassName) async {
+    final response = await http.delete(
+      Uri.parse("\$urlclassName\\\$id"),
+      body: toBeDeletedclassName.toJson(),
       headers: {
         "Content-Type": "application/json",
       },
@@ -103,7 +104,7 @@ class classNameRestApi {
     if (response.statusCode == HttpStatus.ok) {
       return;
     } else {
-      throw Exception('Failed to delete className with id: $id');
+      throw Exception('Failed to delete className with id: \$id');
     }
   }
 }

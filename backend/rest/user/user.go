@@ -1,7 +1,7 @@
 package user
 
 type User struct {
-	ID   int    `json:"id" primaryKey:"1"`
+	Id   string `json:"id" primaryKey:"1"`
 	Name string `json:"name"`
 }
 

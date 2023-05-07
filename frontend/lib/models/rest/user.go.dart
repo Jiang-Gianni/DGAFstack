@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 part 'user.go.g.dart';
 
 class User {
-	final int id;
+	final String id;
 	final String name;
 	
 	User({

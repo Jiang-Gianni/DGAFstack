@@ -8,13 +8,13 @@ dart-dep:
 	(cd frontend && dart pub add json_annotation grpc && dart pub add --dev json_serializable build_runner && dart pub add --dev --path="../utils/generators/" generators)
 
 rest:
-	rm -rf frontend/lib/models/rest && find backend/rest/ -type d -exec make go-to-dart dir={} \; && make rungen n=1
+	rm -rf frontend/lib/models/rest && find backend/rest/ -type d -exec make go-to-dart dir={} \; && make br && make rungen n=1
 
 rungen:
 	find frontend/lib/models/rest -type f -name "*.go.dart" -exec dart rungen.dart {} $(n) \;
 
 go-to-dart:
-	go-to-dart -i $(dir) -o frontend/lib/models/rest -m json && make rungen n=0 && make br
+	go-to-dart -i $(dir) -o frontend/lib/models/rest -m json && make rungen n=0
 
 br:
 	(cd frontend/ && dart run build_runner build)
