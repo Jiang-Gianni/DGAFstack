@@ -108,7 +108,7 @@ func GenerateRestApi[T any](structList []T, keyspace string) {
 			"Pointer":          "*" + packageStruct,
 			"PackageStruct":    packageStruct,
 			"Fields":           fields,
-			"TableName":        strings.ToLower(structName),
+			"TableName":        PascalToSnake(structName),
 			"IdField":          idField,
 			"IdFieldSnake":     PascalToSnake(idField),
 			"SnakeFieldJoined": strings.Join(snakeFieldList, ", "),
