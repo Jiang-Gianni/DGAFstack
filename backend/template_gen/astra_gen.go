@@ -6,11 +6,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"github.com/Jiang-Gianni/DGAFstack/rest/mystruct"
 	"github.com/Jiang-Gianni/DGAFstack/rest/user"
@@ -48,7 +48,7 @@ var (
 			stringList = []string{
 				"client.ToString(val)",
 				fieldName,
-				"%s",
+				"'%s'",
 			}
 		}
 		stringMap := map[string][3]string{
