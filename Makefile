@@ -36,3 +36,6 @@ go:
 
 flutter:
 	(cd frontend && flutter run)
+
+generate:
+	(cd backend && go generate ./...)

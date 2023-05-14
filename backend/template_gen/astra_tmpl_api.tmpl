@@ -13,7 +13,7 @@ import (
 )
 
 {{range $struct := .Structs}}
-
+{{$lenList := len .SnakeFieldList}}
 //{{.Name}} REST API
 var (
 	{{.Name}}ColumnToField = []func(*pb.Value, {{.Pointer}}) {{.Pointer}}{
@@ -89,7 +89,7 @@ func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruc
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdated{{.Name}}s {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.{{.TableName}} set {{range $i, $field := .SnakeFieldList}}{{.}} = {{index $struct.PercList $i}} {{end}};", astraDb.Keyspace, {{.FieldList}}),
+			Cql: fmt.Sprintf("update %s.{{.TableName}} set {{range $i, $field := .SnakeFieldList}}{{$field}} = {{index $struct.PercList $i}}{{if (isNotLast $i $lenList)}}, {{end}}{{end}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, {{.FieldList}}, row.{{.IdField}}),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -108,7 +108,7 @@ func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruc
 
 func (astraDb *AstraDB) Delete{{.Name}}ById(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete * from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
 	}
 	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {

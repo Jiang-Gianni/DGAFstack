@@ -88,7 +88,7 @@ func (astraDb *AstraDB) CreateMyStructs(toBeCreatedMyStructs []mystruct.MyStruct
 		row.Uuid = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.my_struct(uuid, name, number, my_boolean) values (%s, '%s', %d, %t);", astraDb.Keyspace, row.Uuid, row.Name, row.Number, row.MyBoolean),
+			Cql: fmt.Sprintf("insert into %s.my_struct(name, number, my_boolean) values ('%s', %d, %t);", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -108,7 +108,7 @@ func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdatedMyStructs {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.my_struct set uuid = %s name = '%s' number = %d my_boolean = %t ;", astraDb.Keyspace, row.Uuid, row.Name, row.Number, row.MyBoolean),
+			Cql: fmt.Sprintf("update %s.my_struct set name = '%s',number = %d,my_boolean = %t where uuid = %s;", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean, row.Uuid),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -127,7 +127,7 @@ func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct
 
 func (astraDb *AstraDB) DeleteMyStructById(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete * from %s.my_struct where uuid = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.my_struct where uuid = %s;", astraDb.Keyspace, id),
 	}
 	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
@@ -200,7 +200,7 @@ func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, err
 		row.Id = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.user(id, name) values (%s, '%s');", astraDb.Keyspace, row.Id, row.Name),
+			Cql: fmt.Sprintf("insert into %s.user(name) values ('%s');", astraDb.Keyspace, row.Name),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -220,7 +220,7 @@ func (astraDb *AstraDB) UpdateUsers(toBeUpdatedUsers []user.User) error {
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdatedUsers {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.user set id = %s name = '%s' ;", astraDb.Keyspace, row.Id, row.Name),
+			Cql: fmt.Sprintf("update %s.user set name = '%s' where id = %s;", astraDb.Keyspace, row.Name, row.Id),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -239,7 +239,7 @@ func (astraDb *AstraDB) UpdateUsers(toBeUpdatedUsers []user.User) error {
 
 func (astraDb *AstraDB) DeleteUserById(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete * from %s.user where id = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.user where id = %s;", astraDb.Keyspace, id),
 	}
 	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {

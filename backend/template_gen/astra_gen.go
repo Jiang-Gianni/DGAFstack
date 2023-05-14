@@ -93,15 +93,17 @@ func GenerateRestApi[T any](structList []T, keyspace string) {
 				idField = fieldName
 			}
 			funcStrings := ConvertFunctionMap(fieldName, fieldType.String(), isPrimaryKey)
+			if !isPrimaryKey {
+				fieldList = append(fieldList, "row."+fieldName)
+				snakeFieldList = append(snakeFieldList, PascalToSnake(fieldName))
+				percList = append(percList, funcStrings[2])
+			}
 			field := map[string]string{
 				"FieldName":      fieldName,
 				"FirstFunction":  funcStrings[0],
 				"SecondFunction": funcStrings[1],
 			}
 			fields[i] = field
-			fieldList = append(fieldList, "row."+fieldName)
-			snakeFieldList = append(snakeFieldList, PascalToSnake(fieldName))
-			percList = append(percList, funcStrings[2])
 		}
 		structs = append(structs, map[string]any{
 			"Name":             structName,
@@ -120,7 +122,12 @@ func GenerateRestApi[T any](structList []T, keyspace string) {
 	}
 
 	utilAstarApi := restApiFilesPath + "util_astra_api.gen.go"
-	tmpl := template.Must(template.New("").ParseFiles(restApiTemplateFile))
+	var helpers template.FuncMap = map[string]interface{}{
+		"isNotLast": func(index int, len int) bool {
+			return index+1 != len
+		},
+	}
+	tmpl := template.Must(template.New("").Funcs(helpers).ParseFiles(restApiTemplateFile))
 	var processed bytes.Buffer
 	tmpData := map[string]any{
 		"Packages": packages,
