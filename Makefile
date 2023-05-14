@@ -26,10 +26,10 @@ grpc:
 	(rm -rf frontend/lib/models/grpc && mkdir -p frontend/lib/models/grpc && find backend/grpc/ -type f -name "*.proto" -exec make gen-grpc proto={} \;) && make tidy
 
 tidy:
-	(cd backend && go mod tidy)
+	(cd backend && go mod tidy) && (cd frontend && flutter pub get)
 
 gen-grpc:
-	protoc $(proto) --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative && protoc --dart_out=. $(proto) && find backend/grpc/ -type f -name "*.dart" -exec mv {} ./frontend/lib/models/grpc \;
+	protoc $(proto) --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative && protoc --dart_out=. $(proto) && find backend/grpc/ -type f -name "*.dart" -exec mv {} ./frontend/lib/models/grpc/ \;
 
 go:
 	(cd backend && go build -o bin/app && bin/app)

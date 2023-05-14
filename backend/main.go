@@ -10,7 +10,6 @@ import (
 func main() {
 	godotenv.Load("keys.env")
 	astraDb := astra.New()
-	log.Println("Hello go")
 	log.Println(astraDb)
 	// s := NewRESTServer(":4716")
 	// if err := s.Run(); err != nil {
