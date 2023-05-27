@@ -1,0 +1,11 @@
+#Complete this file and rename the extension to .env
+#Astra DB configuration
+
+# https://astra.datastax.com/org/{ASTRA_CLUSTER_ID}/database/{databaseid}
+
+#ASTRA_URI=$ASTRA_CLUSTER_ID-$ASTRA_REGION.apps.astra.datastax.com:443
+#ASTRA_TOKEN=AstraCS:xxxxx:xxxxxxx
+
+ASTRA_URI=
+ASTRA_TOKEN=
+ASTRA_KEYSPACE=
