@@ -3,22 +3,27 @@ package main
 import (
 	"context"
 	"net/http"
+
+	"github.com/Jiang-Gianni/DGAFstack/astra"
+	"github.com/gorilla/mux"
 )
 
 type RESTServer struct {
 	listenAddress string
-	count         int
+	astraDb       *astra.AstraDB
 }
 
-func NewRESTServer(listenAddress string) *RESTServer {
+func NewRESTServer(listenAddress string, astraDb *astra.AstraDB) *RESTServer {
 	return &RESTServer{
 		listenAddress: listenAddress,
-		count:         0,
+		astraDb:       astraDb,
 	}
 }
 
 func (s *RESTServer) Run() error {
-	http.HandleFunc("/", adaptHttpHandlerFunc(s.handleGetUser))
+	router := mux.NewRouter()
+	router.HandleFunc("/user", adaptHttpHandlerFunc(s.handleUser))
+	router.HandleFunc("/user/{id}", adaptHttpHandlerFunc(s.handleUserById))
 	return http.ListenAndServe(s.listenAddress, nil)
 }
 
