@@ -108,7 +108,7 @@ func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdatedMyStructs {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.my_struct set name = '%s',number = %d,my_boolean = %t where uuid = %s;", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean, row.Uuid),
+			Cql: fmt.Sprintf("update %s.my_struct set name = '%s', number = %d, my_boolean = %t where uuid = %s;", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean, row.Uuid),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)

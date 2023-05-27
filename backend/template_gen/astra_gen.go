@@ -77,7 +77,9 @@ func GenerateRestApi[T any](structList []T, keyspace string) {
 	for _, singleStruct := range structList {
 		elem := reflect.ValueOf(singleStruct).Elem()
 		structName := elem.Type().Name()
-		packageStruct := strings.ToLower(structName) + "." + structName
+		splitStrings := elem.Type().PkgPath()
+		packageName := splitStrings[strings.LastIndex(splitStrings, "/")+1:]
+		packageStruct := strings.ToLower(packageName) + "." + structName
 		n := elem.NumField()
 		fields := make([]map[string]string, n)
 		var idField string
