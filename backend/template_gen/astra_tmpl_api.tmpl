@@ -40,7 +40,7 @@ var (
 )
 
 func (astraDb *AstraDB) Get{{.Name}}s() ([]{{.PackageStruct}}, error) {
-	pbQuery := &pb.Query{Cql: fmt.Sprintf("select * from %s.{{.TableName}};", astraDb.Keyspace)}
+	pbQuery := &pb.Query{Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}};", astraDb.Keyspace)}
 	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
@@ -51,7 +51,7 @@ func (astraDb *AstraDB) Get{{.Name}}s() ([]{{.PackageStruct}}, error) {
 
 func (astraDb *AstraDB) Get{{.Name}}ById(id string) ([]{{.PackageStruct}}, error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("select * from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
 	}
 	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
