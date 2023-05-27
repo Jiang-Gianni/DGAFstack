@@ -39,9 +39,21 @@ var (
 	}
 )
 
-func (astraDb *AstraDB) Get{{.Name}}s() ([]{{.PackageStruct}}, error) {
-	pbQuery := &pb.Query{Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}};", astraDb.Keyspace)}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+type {{.Name}} struct {
+	Keyspace       string
+	StargateClient *client.StargateClient
+}
+
+func (astraDb *AstraDB) {{.Name}}() *{{.Name}} {
+	return &{{.Name}}{
+		Keyspace: astraDb.Keyspace,
+		StargateClient: astraDb.StargateClient,
+	}
+}
+
+func (t *{{.Name}}) Get() ([]{{.PackageStruct}}, error) {
+	pbQuery := &pb.Query{Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}};", t.Keyspace)}
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -49,11 +61,11 @@ func (astraDb *AstraDB) Get{{.Name}}s() ([]{{.PackageStruct}}, error) {
 	return {{.Name}}QueryResponse(response)
 }
 
-func (astraDb *AstraDB) Get{{.Name}}ById(id string) ([]{{.PackageStruct}}, error) {
+func (t *{{.Name}}) GetById(id string) ([]{{.PackageStruct}}, error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("select {{.IdFieldSnake}}, {{.SnakeFieldJoined}} from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", t.Keyspace, id),
 	}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -61,7 +73,7 @@ func (astraDb *AstraDB) Get{{.Name}}ById(id string) ([]{{.PackageStruct}}, error
 	return {{.Name}}QueryResponse(response)
 }
 
-func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruct}}) ([]string, error) {
+func (t *{{.Name}}) Create(toBeCreated{{.Name}}s []{{.PackageStruct}}) ([]string, error) {
 	newUuids := []string{}
 	var queries []*pb.BatchQuery
 	for _, row := range toBeCreated{{.Name}}s {
@@ -69,7 +81,7 @@ func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruc
 		row.{{.IdField}} = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.{{.TableName}}({{.IdFieldSnake}}, {{.SnakeFieldJoined}}) values (%s ,{{.PercJoined}});", astraDb.Keyspace, row.{{.IdField}}, {{.FieldList}}),
+			Cql: fmt.Sprintf("insert into %s.{{.TableName}}({{.IdFieldSnake}}, {{.SnakeFieldJoined}}) values (%s ,{{.PercJoined}});", t.Keyspace, row.{{.IdField}}, {{.FieldList}}),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -77,7 +89,7 @@ func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruc
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -85,11 +97,11 @@ func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruc
 	return newUuids, nil
 }
 
-func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruct}}) error {
+func (t *{{.Name}}) Update(toBeUpdated{{.Name}}s []{{.PackageStruct}}) error {
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdated{{.Name}}s {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.{{.TableName}} set {{range $i, $field := .SnakeFieldList}}{{$field}} = {{index $struct.PercList $i}}{{if (isNotLast $i $lenList)}}, {{end}}{{end}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, {{.FieldList}}, row.{{.IdField}}),
+			Cql: fmt.Sprintf("update %s.{{.TableName}} set {{range $i, $field := .SnakeFieldList}}{{$field}} = {{index $struct.PercList $i}}{{if (isNotLast $i $lenList)}}, {{end}}{{end}} where {{.IdFieldSnake}} = %s;", t.Keyspace, {{.FieldList}}, row.{{.IdField}}),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -98,7 +110,7 @@ func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruc
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err
@@ -106,11 +118,11 @@ func (astraDb *AstraDB) Update{{.Name}}s(toBeUpdated{{.Name}}s []{{.PackageStruc
 	return nil
 }
 
-func (astraDb *AstraDB) Delete{{.Name}}ById(id string) (error) {
+func (t *{{.Name}}) Delete(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.{{.TableName}} where {{.IdFieldSnake}} = %s;", t.Keyspace, id),
 	}
-	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	_, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err

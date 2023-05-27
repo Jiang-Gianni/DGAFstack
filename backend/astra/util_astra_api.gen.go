@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	
-	"github.com/Jiang-Gianni/DGAFstack/rest/mystruct"
+	"github.com/Jiang-Gianni/DGAFstack/rest/mytable"
 	"github.com/Jiang-Gianni/DGAFstack/rest/user"
 	"github.com/google/uuid"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
@@ -15,42 +15,36 @@ import (
 
 
 
-//MyStruct REST API
+//MyTable REST API
 var (
-	MyStructColumnToField = []func(*pb.Value, *mystruct.MyStruct) *mystruct.MyStruct{
+	MyTableColumnToField = []func(*pb.Value, *mytable.MyTable) *mytable.MyTable{
 		
-		func(val *pb.Value, p *mystruct.MyStruct) *mystruct.MyStruct {
+		func(val *pb.Value, p *mytable.MyTable) *mytable.MyTable {
 			Uuid, _ := client.ToUUID(val)
 			p.Uuid = Uuid.String()
 			return p
 		},
 		
-		func(val *pb.Value, p *mystruct.MyStruct) *mystruct.MyStruct {
+		func(val *pb.Value, p *mytable.MyTable) *mytable.MyTable {
 			Name, _ := client.ToString(val)
 			p.Name = Name
 			return p
 		},
 		
-		func(val *pb.Value, p *mystruct.MyStruct) *mystruct.MyStruct {
+		func(val *pb.Value, p *mytable.MyTable) *mytable.MyTable {
 			Number, _ := client.ToInt(val)
 			p.Number = int(Number)
 			return p
 		},
 		
-		func(val *pb.Value, p *mystruct.MyStruct) *mystruct.MyStruct {
-			MyBoolean, _ := client.ToBoolean(val)
-			p.MyBoolean = MyBoolean
-			return p
-		},
-		
 	}
-	MyStructQueryResponse = func(response *pb.Response) ([]mystruct.MyStruct, error) {
+	MyTableQueryResponse = func(response *pb.Response) ([]mytable.MyTable, error) {
 		rows := response.GetResultSet().Rows
-		result := make([]mystruct.MyStruct, len(rows))
+		result := make([]mytable.MyTable, len(rows))
 		for rowIndex, row := range rows {
-			rowResult := &mystruct.MyStruct{}
+			rowResult := &mytable.MyTable{}
 			for valueIndex, value := range row.Values {
-				rowResult = MyStructColumnToField[valueIndex](value, rowResult)
+				rowResult = MyTableColumnToField[valueIndex](value, rowResult)
 			}
 			result[rowIndex] = *rowResult
 		}
@@ -58,37 +52,49 @@ var (
 	}
 )
 
-func (astraDb *AstraDB) GetMyStructs() ([]mystruct.MyStruct, error) {
-	pbQuery := &pb.Query{Cql: fmt.Sprintf("select * from %s.my_struct;", astraDb.Keyspace)}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+type MyTable struct {
+	Keyspace       string
+	StargateClient *client.StargateClient
+}
+
+func (astraDb *AstraDB) MyTable() *MyTable {
+	return &MyTable{
+		Keyspace: astraDb.Keyspace,
+		StargateClient: astraDb.StargateClient,
+	}
+}
+
+func (t *MyTable) Get() ([]mytable.MyTable, error) {
+	pbQuery := &pb.Query{Cql: fmt.Sprintf("select uuid, name, number from %s.my_table;", t.Keyspace)}
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
 	}
-	return MyStructQueryResponse(response)
+	return MyTableQueryResponse(response)
 }
 
-func (astraDb *AstraDB) GetMyStructById(id string) ([]mystruct.MyStruct, error) {
+func (t *MyTable) GetById(id string) ([]mytable.MyTable, error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("select * from %s.my_struct where uuid = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("select uuid, name, number from %s.my_table where uuid = %s;", t.Keyspace, id),
 	}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
 	}
-	return MyStructQueryResponse(response)
+	return MyTableQueryResponse(response)
 }
 
-func (astraDb *AstraDB) CreateMyStructs(toBeCreatedMyStructs []mystruct.MyStruct) ([]string, error) {
+func (t *MyTable) Create(toBeCreatedMyTables []mytable.MyTable) ([]string, error) {
 	newUuids := []string{}
 	var queries []*pb.BatchQuery
-	for _, row := range toBeCreatedMyStructs {
+	for _, row := range toBeCreatedMyTables {
 		rowUuid := uuid.New().String()
 		row.Uuid = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.my_struct(uuid, name, number, my_boolean) values (%s ,'%s', %d, %t);", astraDb.Keyspace, row.Uuid, row.Name, row.Number, row.MyBoolean),
+			Cql: fmt.Sprintf("insert into %s.my_table(uuid, name, number) values (%s ,'%s', %d);", t.Keyspace, row.Uuid, row.Name, row.Number),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -96,7 +102,7 @@ func (astraDb *AstraDB) CreateMyStructs(toBeCreatedMyStructs []mystruct.MyStruct
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -104,11 +110,11 @@ func (astraDb *AstraDB) CreateMyStructs(toBeCreatedMyStructs []mystruct.MyStruct
 	return newUuids, nil
 }
 
-func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct) error {
+func (t *MyTable) Update(toBeUpdatedMyTables []mytable.MyTable) error {
 	var queries []*pb.BatchQuery
-	for _, row := range toBeUpdatedMyStructs {
+	for _, row := range toBeUpdatedMyTables {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.my_struct set name = '%s', number = %d, my_boolean = %t where uuid = %s;", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean, row.Uuid),
+			Cql: fmt.Sprintf("update %s.my_table set name = '%s', number = %d where uuid = %s;", t.Keyspace, row.Name, row.Number, row.Uuid),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -117,7 +123,7 @@ func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err
@@ -125,11 +131,11 @@ func (astraDb *AstraDB) UpdateMyStructs(toBeUpdatedMyStructs []mystruct.MyStruct
 	return nil
 }
 
-func (astraDb *AstraDB) DeleteMyStructById(id string) (error) {
+func (t *MyTable) Delete(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete from %s.my_struct where uuid = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.my_table where uuid = %s;", t.Keyspace, id),
 	}
-	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	_, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err
@@ -170,9 +176,21 @@ var (
 	}
 )
 
-func (astraDb *AstraDB) GetUsers() ([]user.User, error) {
-	pbQuery := &pb.Query{Cql: fmt.Sprintf("select * from %s.user;", astraDb.Keyspace)}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+type User struct {
+	Keyspace       string
+	StargateClient *client.StargateClient
+}
+
+func (astraDb *AstraDB) User() *User {
+	return &User{
+		Keyspace: astraDb.Keyspace,
+		StargateClient: astraDb.StargateClient,
+	}
+}
+
+func (t *User) Get() ([]user.User, error) {
+	pbQuery := &pb.Query{Cql: fmt.Sprintf("select id, name from %s.user;", t.Keyspace)}
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -180,11 +198,11 @@ func (astraDb *AstraDB) GetUsers() ([]user.User, error) {
 	return UserQueryResponse(response)
 }
 
-func (astraDb *AstraDB) GetUserById(id string) ([]user.User, error) {
+func (t *User) GetById(id string) ([]user.User, error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("select * from %s.user where id = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("select id, name from %s.user where id = %s;", t.Keyspace, id),
 	}
-	response, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	response, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -192,7 +210,7 @@ func (astraDb *AstraDB) GetUserById(id string) ([]user.User, error) {
 	return UserQueryResponse(response)
 }
 
-func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, error) {
+func (t *User) Create(toBeCreatedUsers []user.User) ([]string, error) {
 	newUuids := []string{}
 	var queries []*pb.BatchQuery
 	for _, row := range toBeCreatedUsers {
@@ -200,7 +218,7 @@ func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, err
 		row.Id = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.user(id, name) values (%s ,'%s');", astraDb.Keyspace, row.Id, row.Name),
+			Cql: fmt.Sprintf("insert into %s.user(id, name) values (%s ,'%s');", t.Keyspace, row.Id, row.Name),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -208,7 +226,7 @@ func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, err
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return nil, err
@@ -216,11 +234,11 @@ func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, err
 	return newUuids, nil
 }
 
-func (astraDb *AstraDB) UpdateUsers(toBeUpdatedUsers []user.User) error {
+func (t *User) Update(toBeUpdatedUsers []user.User) error {
 	var queries []*pb.BatchQuery
 	for _, row := range toBeUpdatedUsers {
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("update %s.user set name = '%s' where id = %s;", astraDb.Keyspace, row.Name, row.Id),
+			Cql: fmt.Sprintf("update %s.user set name = '%s' where id = %s;", t.Keyspace, row.Name, row.Id),
 		}
 		_ = row
 		queries = append(queries, &rowBatchQuery)
@@ -229,7 +247,7 @@ func (astraDb *AstraDB) UpdateUsers(toBeUpdatedUsers []user.User) error {
 		Type:    pb.Batch_LOGGED,
 		Queries: queries,
 	}
-	_, err := astraDb.StargateClient.ExecuteBatch(pbBatch)
+	_, err := t.StargateClient.ExecuteBatch(pbBatch)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err
@@ -237,11 +255,11 @@ func (astraDb *AstraDB) UpdateUsers(toBeUpdatedUsers []user.User) error {
 	return nil
 }
 
-func (astraDb *AstraDB) DeleteUserById(id string) (error) {
+func (t *User) Delete(id string) (error) {
 	pbQuery := &pb.Query{
-		Cql: fmt.Sprintf("delete from %s.user where id = %s;", astraDb.Keyspace, id),
+		Cql: fmt.Sprintf("delete from %s.user where id = %s;", t.Keyspace, id),
 	}
-	_, err := astraDb.StargateClient.ExecuteQuery(pbQuery)
+	_, err := t.StargateClient.ExecuteQuery(pbQuery)
 	if err != nil {
 		fmt.Printf("error executing query %v", err)
 		return err

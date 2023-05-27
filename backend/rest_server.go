@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/Jiang-Gianni/DGAFstack/astra"
+	"github.com/Jiang-Gianni/DGAFstack/rest/mytable"
 	"github.com/gorilla/mux"
 )
 
@@ -22,18 +22,13 @@ func NewRESTServer(listenAddress string, astraDb *astra.AstraDB) *RESTServer {
 
 func (s *RESTServer) Run() error {
 	router := mux.NewRouter()
-	router.HandleFunc("/user", adaptHttpHandlerFunc(s.handleUser))
-	router.HandleFunc("/user/{id}", adaptHttpHandlerFunc(s.handleUserById))
-	return http.ListenAndServe(s.listenAddress, nil)
-}
-
-type APIFunc func(context.Context, http.ResponseWriter, *http.Request) error
-
-func adaptHttpHandlerFunc(apiFunc APIFunc) http.HandlerFunc {
-	ctx := context.Background()
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := apiFunc(ctx, w, r); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
-		}
-	}
+	RegisterGenericCrud[mytable.MyTable](
+		router,
+		"/api/v1/table",
+		s.astraDb.MyTable(),
+		func(t []mytable.MyTable, i, j int) bool {
+			return t[i].Uuid < t[j].Uuid
+		},
+	)
+	return http.ListenAndServe(s.listenAddress, router)
 }

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Jiang-Gianni/DGAFstack/rest/mystruct"
+	"github.com/Jiang-Gianni/DGAFstack/rest/mytable"
 	"github.com/Jiang-Gianni/DGAFstack/rest/user"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -20,11 +20,11 @@ import (
 
 var (
 	typeList = []interface{}{
-		&mystruct.MyStruct{},
+		&mytable.MyTable{},
 		&user.User{},
 	}
 	packages = []string{
-		"github.com/Jiang-Gianni/DGAFstack/rest/mystruct",
+		"github.com/Jiang-Gianni/DGAFstack/rest/mytable",
 		"github.com/Jiang-Gianni/DGAFstack/rest/user",
 	}
 	keyspace            = "test"

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 
-	"github.com/Jiang-Gianni/DGAFstack/rest/user"
 	"github.com/gorilla/mux"
 )
 
@@ -25,14 +25,13 @@ func handleGeneric[T any](
 	ctx context.Context,
 	w http.ResponseWriter,
 	r *http.Request,
-	GetAll func() ([]T, error),
-	Create func([]T) ([]string, error),
+	Crud CrudService[T],
 	Sort func([]T, int, int) bool,
 ) error {
 	defer r.Body.Close()
 	switch r.Method {
 	case http.MethodGet:
-		typeContainers, err := GetAll()
+		typeContainers, err := Crud.Get()
 		if err != nil {
 			return writeError(w, err)
 		}
@@ -43,7 +42,7 @@ func handleGeneric[T any](
 	case http.MethodPost:
 		typeContainer := new(T)
 		json.NewDecoder(r.Body).Decode(typeContainer)
-		ids, err := Create([]T{*typeContainer})
+		ids, err := Crud.Create([]T{*typeContainer})
 		if err != nil {
 			return writeError(w, err)
 		}
@@ -57,9 +56,7 @@ func handleGenericById[T any](
 	ctx context.Context,
 	w http.ResponseWriter,
 	r *http.Request,
-	GetById func(string) ([]T, error),
-	Update func([]T) error,
-	Delete func(string) error,
+	Crud CrudService[T],
 ) error {
 	defer r.Body.Close()
 	id, ok := mux.Vars(r)["id"]
@@ -68,7 +65,7 @@ func handleGenericById[T any](
 	}
 	switch r.Method {
 	case http.MethodGet:
-		typeContainers, err := GetById(id)
+		typeContainers, err := Crud.GetById(id)
 		if err != nil {
 			return writeError(w, err)
 		}
@@ -76,13 +73,13 @@ func handleGenericById[T any](
 	case http.MethodPut:
 		toBeUpdated := new(T)
 		json.NewDecoder(r.Body).Decode(toBeUpdated)
-		err := Update([]T{*toBeUpdated})
+		err := Crud.Update([]T{*toBeUpdated})
 		if err != nil {
 			return writeError(w, err)
 		}
 		return writeJSON(w, http.StatusOK, id)
 	case http.MethodDelete:
-		err := Delete(id)
+		err := Crud.Delete(id)
 		if err != nil {
 			return writeError(w, err)
 		}
@@ -92,26 +89,24 @@ func handleGenericById[T any](
 	}
 }
 
-func (s *RESTServer) handleUser(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	return handleGeneric(
-		ctx,
-		w,
-		r,
-		s.astraDb.GetUsers,
-		s.astraDb.CreateUsers,
-		func(users []user.User, i, j int) bool {
-			return users[i].Id < users[j].Id
+func RegisterGenericCrud[T any](router *mux.Router, apiString string, crud CrudService[T], Sort func([]T, int, int) bool) {
+	ctx := context.Background()
+	router.HandleFunc(
+		apiString,
+		func(w http.ResponseWriter, r *http.Request) {
+			log.Println("HELLO???")
+			if err := handleGeneric(ctx, w, r, crud, Sort); err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+			}
 		},
 	)
-}
-
-func (s *RESTServer) handleUserById(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	return handleGenericById(
-		ctx,
-		w,
-		r,
-		s.astraDb.GetUserById,
-		s.astraDb.UpdateUsers,
-		s.astraDb.DeleteUserById,
+	router.HandleFunc(
+		apiString+"/{id}",
+		func(w http.ResponseWriter, r *http.Request) {
+			log.Println("HELLO???")
+			if err := handleGenericById(ctx, w, r, crud); err != nil {
+				writeJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+			}
+		},
 	)
 }
