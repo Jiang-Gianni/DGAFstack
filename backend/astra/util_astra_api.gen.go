@@ -88,7 +88,7 @@ func (astraDb *AstraDB) CreateMyStructs(toBeCreatedMyStructs []mystruct.MyStruct
 		row.Uuid = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.my_struct(name, number, my_boolean) values ('%s', %d, %t);", astraDb.Keyspace, row.Name, row.Number, row.MyBoolean),
+			Cql: fmt.Sprintf("insert into %s.my_struct(uuid, name, number, my_boolean) values (%s ,'%s', %d, %t);", astraDb.Keyspace, row.Uuid, row.Name, row.Number, row.MyBoolean),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
@@ -200,7 +200,7 @@ func (astraDb *AstraDB) CreateUsers(toBeCreatedUsers []user.User) ([]string, err
 		row.Id = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.user(name) values ('%s');", astraDb.Keyspace, row.Name),
+			Cql: fmt.Sprintf("insert into %s.user(id, name) values (%s ,'%s');", astraDb.Keyspace, row.Id, row.Name),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}

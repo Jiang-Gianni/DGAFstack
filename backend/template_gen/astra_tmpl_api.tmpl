@@ -69,7 +69,7 @@ func (astraDb *AstraDB) Create{{.Name}}s(toBeCreated{{.Name}}s []{{.PackageStruc
 		row.{{.IdField}} = rowUuid
 		newUuids = append(newUuids, rowUuid)
 		rowBatchQuery := pb.BatchQuery{
-			Cql: fmt.Sprintf("insert into %s.{{.TableName}}({{.SnakeFieldJoined}}) values ({{.PercJoined}});", astraDb.Keyspace, {{.FieldList}}),
+			Cql: fmt.Sprintf("insert into %s.{{.TableName}}({{.IdFieldSnake}}, {{.SnakeFieldJoined}}) values (%s ,{{.PercJoined}});", astraDb.Keyspace, row.{{.IdField}}, {{.FieldList}}),
 		}
 		queries = append(queries, &rowBatchQuery)
 	}
